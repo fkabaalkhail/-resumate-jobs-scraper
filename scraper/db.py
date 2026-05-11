@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import urlparse, urlencode, parse_qs
 
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Float, JSON, text
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Float, JSON, Enum, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class ScrapedJob(Base):
     url = Column(String, nullable=False, unique=True)
     description = Column(Text, default="")
     easy_apply = Column(Integer, default=0)
-    status = Column(String, default="new")
+    status = Column(Enum("new", "applying", "waiting_answer", "applied", "failed", "skipped", name="jobstatus"), default="new")
     scraped_at = Column(DateTime, default=datetime.utcnow)
     posted_date = Column(DateTime, nullable=True)
     match_score = Column(Integer, default=0)

@@ -46,7 +46,7 @@ class LocationFilter:
     }
     
     US_INDICATORS = {"united states", "usa", "u.s.", "u.s.a."}
-    CA_INDICATORS = {"canada"}
+    CA_INDICATORS = {"canada", "can"}
     
     def filter(self, location: str) -> LocationResult:
         """Evaluate location for country and work type."""
