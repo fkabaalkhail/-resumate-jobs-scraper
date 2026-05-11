@@ -44,7 +44,14 @@ class EntryLevelFilter:
     ]
     
     def filter(self, title: str) -> FilterResult:
-        """Evaluate a job title for entry-level indicators."""
+        """Evaluate a job title for entry-level indicators.
+        
+        Logic:
+        1. If title has senior indicators → exclude
+        2. If title has intern indicators → internship
+        3. If title has new grad indicators → new_grad
+        4. If title has NO seniority indicator at all → new_grad (assume entry-level)
+        """
         if not title:
             return FilterResult(is_entry_level=False)
         
@@ -63,5 +70,6 @@ class EntryLevelFilter:
             if pattern.search(title):
                 return FilterResult(is_entry_level=True, experience_level="new_grad")
         
-        # No match — not entry level
-        return FilterResult(is_entry_level=False)
+        # No seniority indicator at all — include as new_grad
+        # (Most entry-level jobs are just "Software Engineer", "Data Analyst", etc.)
+        return FilterResult(is_entry_level=True, experience_level="new_grad")

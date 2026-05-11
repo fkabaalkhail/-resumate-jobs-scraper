@@ -111,6 +111,11 @@ class LocationFilter:
         if re.search(r'\bremote\b', loc_lower):
             return "US"
         
+        # "Hybrid" or "In-Office" without any location info — default to US
+        # (Most companies using these ATS platforms are US-based)
+        if re.search(r'\b(hybrid|in-?office|on-?site|onsite)\b', loc_lower):
+            return "US"
+        
         return None
     
     def _classify_work_type(self, location: str) -> str:
