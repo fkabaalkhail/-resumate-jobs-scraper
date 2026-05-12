@@ -90,9 +90,10 @@ class LeverClient(BaseClient):
             description = ""
             desc_plain = posting.get("descriptionPlain", "") or ""
             if desc_plain:
-                description = desc_plain.strip()
-                if len(description) > 2000:
-                    description = description[:2000] + "..."
+                from html import unescape
+                description = unescape(desc_plain).strip()
+                if len(description) > 3000:
+                    description = description[:3000] + "..."
             
             return RawJob(
                 title=title,

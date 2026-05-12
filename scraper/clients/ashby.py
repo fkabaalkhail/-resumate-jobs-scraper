@@ -75,12 +75,15 @@ class AshbyClient(BaseClient):
             desc_html = job_data.get("descriptionHtml", "") or job_data.get("description", "")
             if desc_html:
                 import re
-                description = re.sub(r'<[^>]+>', '\n', desc_html)
+                from html import unescape
+                description = unescape(desc_html)
+                description = re.sub(r'<[^>]+>', '\n', description)
                 description = re.sub(r'\n{3,}', '\n\n', description).strip()
-                if len(description) > 2000:
-                    description = description[:2000] + "..."
+                if len(description) > 3000:
+                    description = description[:3000] + "..."
             elif job_data.get("descriptionPlain", ""):
-                description = job_data["descriptionPlain"].strip()[:2000]
+                from html import unescape
+                description = unescape(job_data["descriptionPlain"]).strip()[:3000]
             
             return RawJob(
                 title=title,

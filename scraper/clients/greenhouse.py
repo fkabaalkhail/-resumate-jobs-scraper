@@ -72,13 +72,15 @@ class GreenhouseClient(BaseClient):
             description = ""
             content = job_data.get("content", "")
             if content:
-                # Strip HTML tags for plain text
+                # Strip HTML tags and decode entities for plain text
                 import re
-                description = re.sub(r'<[^>]+>', '\n', content)
+                from html import unescape
+                description = unescape(content)  # Decode &lt; &amp; &quot; etc.
+                description = re.sub(r'<[^>]+>', '\n', description)  # Strip HTML tags
                 description = re.sub(r'\n{3,}', '\n\n', description).strip()
-                # Limit to 2000 chars to avoid bloating the DB
-                if len(description) > 2000:
-                    description = description[:2000] + "..."
+                # Limit to 3000 chars
+                if len(description) > 3000:
+                    description = description[:3000] + "..."
             
             return RawJob(
                 title=title,
