@@ -23,6 +23,7 @@ class RawJob:
     salary_range: str = ""
     company_logo: str = ""
     employment_type: Optional[str] = None
+    description: str = ""
 
 
 class BaseClient:

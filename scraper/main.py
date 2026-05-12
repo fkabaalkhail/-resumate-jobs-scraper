@@ -164,6 +164,7 @@ class ATSScraper:
             "company": job.company,
             "location": job.location,
             "url": job.url,
+            "description": job.description,
             "posted_date": job.posted_date.replace(tzinfo=None) if job.posted_date else None,
             "salary_range": job.salary_range,
             "company_logo": job.company_logo,

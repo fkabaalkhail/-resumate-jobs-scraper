@@ -68,6 +68,18 @@ class GreenhouseClient(BaseClient):
             # Salary (from metadata if available)
             salary_range = self._extract_salary(job_data)
             
+            # Description (from content field)
+            description = ""
+            content = job_data.get("content", "")
+            if content:
+                # Strip HTML tags for plain text
+                import re
+                description = re.sub(r'<[^>]+>', '\n', content)
+                description = re.sub(r'\n{3,}', '\n\n', description).strip()
+                # Limit to 2000 chars to avoid bloating the DB
+                if len(description) > 2000:
+                    description = description[:2000] + "..."
+            
             return RawJob(
                 title=title,
                 company=company["company_name"],
@@ -77,6 +89,7 @@ class GreenhouseClient(BaseClient):
                 department=department,
                 salary_range=salary_range,
                 company_logo=company.get("company_logo_url", ""),
+                description=description,
             )
         except Exception as e:
             logger.warning(f"Error parsing Greenhouse job: {e}")
