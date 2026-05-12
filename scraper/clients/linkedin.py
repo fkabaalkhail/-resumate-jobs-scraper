@@ -21,26 +21,22 @@ class LinkedInClient(BaseClient):
     """Scrapes jobs from LinkedIn's public job search."""
 
     PLATFORM = "linkedin"
-    MAX_RETRIES = 2
-    RATE_LIMIT_WAIT = 30
-    REQUEST_DELAY = 3.0  # Be respectful — 3s between requests
+    MAX_RETRIES = 1  # Don't retry LinkedIn — just skip on failure
+    RATE_LIMIT_WAIT = 10
+    REQUEST_DELAY = 2.0  # 2s between requests
 
-    # Search configurations for different locations/keywords
+    # Search configurations — keep it lean for speed
     SEARCHES = [
-        # Canada - broad
+        # Canada
         {"keywords": "intern software engineer", "location": "Canada", "geo_id": "101174742"},
         {"keywords": "new grad software", "location": "Canada", "geo_id": "101174742"},
         {"keywords": "co-op developer", "location": "Canada", "geo_id": "101174742"},
-        {"keywords": "junior software engineer", "location": "Canada", "geo_id": "101174742"},
-        {"keywords": "intern data", "location": "Canada", "geo_id": "101174742"},
-        {"keywords": "entry level engineer", "location": "Canada", "geo_id": "101174742"},
-        # US - broad
+        {"keywords": "junior engineer", "location": "Canada", "geo_id": "101174742"},
+        # US
         {"keywords": "intern software engineer", "location": "United States", "geo_id": "103644278"},
         {"keywords": "new grad software", "location": "United States", "geo_id": "103644278"},
         {"keywords": "junior developer", "location": "United States", "geo_id": "103644278"},
         {"keywords": "entry level data analyst", "location": "United States", "geo_id": "103644278"},
-        {"keywords": "intern machine learning", "location": "United States", "geo_id": "103644278"},
-        {"keywords": "associate software engineer", "location": "United States", "geo_id": "103644278"},
     ]
 
     async def scrape_company(self, company: dict) -> list[RawJob]:
@@ -77,7 +73,7 @@ class LinkedInClient(BaseClient):
         return all_jobs
 
     async def _scrape_search(
-        self, keywords: str, location: str, geo_id: str = "", max_pages: int = 2
+        self, keywords: str, location: str, geo_id: str = "", max_pages: int = 1
     ) -> list[RawJob]:
         """Scrape a single LinkedIn job search query (up to max_pages of 25 results each)."""
         jobs: list[RawJob] = []
