@@ -18,6 +18,7 @@ from .clients.greenhouse import GreenhouseClient
 from .clients.lever import LeverClient
 from .clients.ashby import AshbyClient
 from .clients.workday import WorkdayClient
+from .clients.linkedin import LinkedInClient
 from .services.entry_level_filter import EntryLevelFilter
 from .services.category_classifier import CategoryClassifier
 from .services.location_filter import LocationFilter
@@ -123,6 +124,23 @@ class ATSScraper:
                     
                     # Delay between companies
                     await asyncio.sleep(client.REQUEST_DELAY)
+            
+            # LinkedIn public job search (runs after all ATS platforms)
+            if not platform_filter or platform_filter == "linkedin":
+                logger.info("Starting LinkedIn public job search...")
+                linkedin_client = LinkedInClient(http_client)
+                try:
+                    linkedin_jobs = await linkedin_client.scrape_all_searches()
+                    stats.total_jobs_found += len(linkedin_jobs)
+                    for job in linkedin_jobs:
+                        stored = self._process_job(job, "linkedin", session)
+                        if stored:
+                            stats.new_jobs_stored += 1
+                        elif stored is False:
+                            stats.duplicates_skipped += 1
+                    logger.info(f"LinkedIn: found {len(linkedin_jobs)} jobs")
+                except Exception as e:
+                    logger.error(f"LinkedIn scraping failed: {e}")
         
         session.close()
         
