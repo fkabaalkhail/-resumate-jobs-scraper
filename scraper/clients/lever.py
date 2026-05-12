@@ -86,6 +86,14 @@ class LeverClient(BaseClient):
                         salary_range = match.group(0)
                         break
             
+            # Description from Lever's descriptionPlain field
+            description = ""
+            desc_plain = posting.get("descriptionPlain", "") or ""
+            if desc_plain:
+                description = desc_plain.strip()
+                if len(description) > 2000:
+                    description = description[:2000] + "..."
+            
             return RawJob(
                 title=title,
                 company=company["company_name"],
@@ -96,6 +104,7 @@ class LeverClient(BaseClient):
                 salary_range=salary_range,
                 company_logo=company.get("company_logo_url", ""),
                 employment_type=employment_type,
+                description=description,
             )
         except Exception as e:
             logger.warning(f"Error parsing Lever posting: {e}")

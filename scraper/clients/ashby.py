@@ -70,6 +70,18 @@ class AshbyClient(BaseClient):
             # Employment type
             employment_type = job_data.get("employmentType", "")
             
+            # Description from Ashby's descriptionHtml or descriptionPlain field
+            description = ""
+            desc_html = job_data.get("descriptionHtml", "") or job_data.get("description", "")
+            if desc_html:
+                import re
+                description = re.sub(r'<[^>]+>', '\n', desc_html)
+                description = re.sub(r'\n{3,}', '\n\n', description).strip()
+                if len(description) > 2000:
+                    description = description[:2000] + "..."
+            elif job_data.get("descriptionPlain", ""):
+                description = job_data["descriptionPlain"].strip()[:2000]
+            
             return RawJob(
                 title=title,
                 company=company["company_name"],
@@ -79,6 +91,7 @@ class AshbyClient(BaseClient):
                 department=department,
                 company_logo=company.get("company_logo_url", ""),
                 employment_type=employment_type,
+                description=description,
             )
         except Exception as e:
             logger.warning(f"Error parsing Ashby job: {e}")

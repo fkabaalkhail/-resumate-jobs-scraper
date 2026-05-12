@@ -102,6 +102,16 @@ class WorkdayClient(BaseClient):
                 except (ValueError, AttributeError):
                     pass
             
+            # Description from Workday job data
+            description = ""
+            desc = job_data.get("description", "") or job_data.get("jobDescription", "")
+            if desc:
+                import re
+                description = re.sub(r'<[^>]+>', '\n', desc)
+                description = re.sub(r'\n{3,}', '\n\n', description).strip()
+                if len(description) > 2000:
+                    description = description[:2000] + "..."
+            
             return RawJob(
                 title=title,
                 company=company["company_name"],
@@ -109,6 +119,7 @@ class WorkdayClient(BaseClient):
                 url=url,
                 posted_date=posted_date,
                 company_logo=company.get("company_logo_url", ""),
+                description=description,
             )
         except Exception as e:
             logger.warning(f"Error parsing Workday job: {e}")
