@@ -103,6 +103,24 @@ class GreenhouseClient(BaseClient):
             for item in metadata:
                 if isinstance(item, dict):
                     name = item.get("name", "").lower()
-                    if "salary" in name or "compensation" in name:
-                        return item.get("value", "")
+                    if "salary" in name or "compensation" in name or "pay" in name:
+                        value = item.get("value", "")
+                        if value:
+                            return value
+        
+        # Try to extract salary from the content/description HTML
+        content = job_data.get("content", "")
+        if content:
+            import re
+            # Match patterns like $44,500-$71,200, $20-$25/hr, $123,500 - $182,000
+            salary_patterns = [
+                r'\$[\d,]+(?:\.\d+)?\s*[-–to]+\s*\$[\d,]+(?:\.\d+)?(?:\s*/\s*(?:yr|year|hr|hour|annually|monthly))?',
+                r'\$[\d,]+(?:\.\d+)?\s*/\s*(?:yr|year|hr|hour)',
+                r'\$[\d,]+(?:\.\d+)?(?:K)?\s*[-–]\s*\$[\d,]+(?:\.\d+)?(?:K)?',
+            ]
+            for pattern in salary_patterns:
+                match = re.search(pattern, content, re.IGNORECASE)
+                if match:
+                    return match.group(0)
+        
         return ""

@@ -69,6 +69,23 @@ class LeverClient(BaseClient):
             # Employment type / commitment
             employment_type = categories.get("commitment", "")
             
+            # Salary - Lever sometimes includes it in the description or additional fields
+            salary_range = ""
+            description_text = posting.get("descriptionPlain", "") or ""
+            additional = posting.get("additional", "") or posting.get("additionalPlain", "") or ""
+            combined_text = description_text + " " + additional
+            if combined_text.strip():
+                import re
+                salary_patterns = [
+                    r'\$[\d,]+(?:\.\d+)?\s*[-–to]+\s*\$[\d,]+(?:\.\d+)?(?:\s*/\s*(?:yr|year|hr|hour|annually))?',
+                    r'\$[\d,]+(?:\.\d+)?\s*/\s*(?:yr|year|hr|hour)',
+                ]
+                for pattern in salary_patterns:
+                    match = re.search(pattern, combined_text, re.IGNORECASE)
+                    if match:
+                        salary_range = match.group(0)
+                        break
+            
             return RawJob(
                 title=title,
                 company=company["company_name"],
@@ -76,6 +93,7 @@ class LeverClient(BaseClient):
                 url=url,
                 posted_date=posted_date,
                 department=department,
+                salary_range=salary_range,
                 company_logo=company.get("company_logo_url", ""),
                 employment_type=employment_type,
             )
