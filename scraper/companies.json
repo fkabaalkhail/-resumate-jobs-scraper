@@ -1735,6 +1735,30 @@
       "enabled": true
     },
     {
+      "company_name": "Magna",
+      "ats_platform": "workday",
+      "board_slug": "magna",
+      "workday_url_template": "https://magna.wd3.myworkdayjobs.com/wday/cxs/magna/Magna",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=magna.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "BDO",
+      "ats_platform": "workday",
+      "board_slug": "bdo",
+      "workday_url_template": "https://bdo.wd3.myworkdayjobs.com/wday/cxs/bdo/Bdo",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=bdo.ca&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Hitachi",
+      "ats_platform": "workday",
+      "board_slug": "hitachi",
+      "workday_url_template": "https://hitachi.wd1.myworkdayjobs.com/wday/cxs/hitachi/Hitachi",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=hitachi.com&sz=128",
+      "enabled": true
+    },
+    {
       "company_name": "EY",
       "ats_platform": "workday",
       "board_slug": "ey",
