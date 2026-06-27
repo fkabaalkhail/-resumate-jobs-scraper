@@ -18,6 +18,7 @@ from .clients.greenhouse import GreenhouseClient
 from .clients.lever import LeverClient
 from .clients.ashby import AshbyClient
 from .clients.workday import WorkdayClient
+from .clients.oracle import OracleClient
 from .clients.linkedin import LinkedInClient
 from .services.entry_level_filter import EntryLevelFilter
 from .services.category_classifier import CategoryClassifier
@@ -40,6 +41,7 @@ class ScrapeStats:
     jobs_after_filter: int = 0
     new_jobs_stored: int = 0
     duplicates_skipped: int = 0
+    db_errors: int = 0
 
 
 CLIENT_MAP = {
@@ -47,6 +49,7 @@ CLIENT_MAP = {
     "lever": LeverClient,
     "ashby": AshbyClient,
     "workday": WorkdayClient,
+    "oracle": OracleClient,
 }
 
 
@@ -111,7 +114,12 @@ class ATSScraper:
                         
                         # Process each job through the pipeline
                         for job in raw_jobs:
-                            stored = self._process_job(job, platform, session)
+                            try:
+                                stored = self._process_job(job, platform, session)
+                            except Exception as e:
+                                stats.db_errors += 1
+                                logger.error(f"DB write error for {company['company_name']}: {e}")
+                                continue
                             if stored:
                                 stats.new_jobs_stored += 1
                             elif stored is False:
@@ -133,7 +141,12 @@ class ATSScraper:
                     linkedin_jobs = await linkedin_client.scrape_all_searches()
                     stats.total_jobs_found += len(linkedin_jobs)
                     for job in linkedin_jobs:
-                        stored = self._process_job(job, "linkedin", session)
+                        try:
+                            stored = self._process_job(job, "linkedin", session)
+                        except Exception as e:
+                            stats.db_errors += 1
+                            logger.error(f"DB write error (LinkedIn): {e}")
+                            continue
                         if stored:
                             stats.new_jobs_stored += 1
                         elif stored is False:
@@ -148,9 +161,9 @@ class ATSScraper:
         logger.info(
             f"Scrape complete: {stats.companies_succeeded}/{stats.total_companies} companies, "
             f"{stats.total_jobs_found} found, {stats.new_jobs_stored} new, "
-            f"{stats.duplicates_skipped} duplicates"
+            f"{stats.duplicates_skipped} duplicates, {stats.db_errors} db_errors"
         )
-        
+
         return stats
     
     def _process_job(self, job: RawJob, platform: str, session) -> Optional[bool]:
@@ -201,7 +214,7 @@ class ATSScraper:
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="ATS Job Scraper")
-    parser.add_argument("--platform", choices=["greenhouse", "lever", "ashby", "workday"],
+    parser.add_argument("--platform", choices=["greenhouse", "lever", "ashby", "workday", "oracle"],
                        help="Scrape only a specific platform")
     parser.add_argument("--company", type=str, help="Scrape a single company by name")
     args = parser.parse_args()
@@ -212,10 +225,27 @@ def main():
         sys.exit(1)
     
     scraper = ATSScraper(db_url=db_url)
-    asyncio.run(scraper.run(
+    stats = asyncio.run(scraper.run(
         platform_filter=args.platform,
         company_filter=args.company,
     ))
+
+    # Fail loudly so the scheduled run is marked failed (and emails) instead of
+    # silently succeeding with nothing written.
+    if stats.db_errors > 0 and stats.new_jobs_stored == 0:
+        logger.critical(
+            "ABORTING: %d database write errors and 0 jobs stored despite %d found — "
+            "likely a bad DATABASE_URL / expired credential. Check the DATABASE_URL secret.",
+            stats.db_errors, stats.total_jobs_found,
+        )
+        sys.exit(1)
+
+    if stats.total_jobs_found > 0 and stats.new_jobs_stored == 0 and stats.duplicates_skipped == 0:
+        logger.critical(
+            "ABORTING: found %d jobs but stored 0 and skipped 0 — pipeline/storage is broken.",
+            stats.total_jobs_found,
+        )
+        sys.exit(1)
 
 
 if __name__ == "__main__":

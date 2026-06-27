@@ -1453,6 +1453,32 @@
       "enabled": true
     },
     {
+      "company_name": "BlackBerry",
+      "ats_platform": "workday",
+      "board_slug": "blackberry",
+      "workday_url_template": "https://bb.wd3.myworkdayjobs.com/wday/cxs/bb/BlackBerry",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=blackberry.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "QNX",
+      "ats_platform": "workday",
+      "board_slug": "qnx",
+      "workday_url_template": "https://bb.wd3.myworkdayjobs.com/wday/cxs/bb/QNX",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=qnx.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Nokia",
+      "ats_platform": "oracle",
+      "board_slug": "nokia",
+      "oracle_host": "fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com",
+      "oracle_site": "CX_1",
+      "oracle_careers_host": "jobs.nokia.com",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=nokia.com&sz=128",
+      "enabled": true
+    },
+    {
       "company_name": "EY",
       "ats_platform": "workday",
       "board_slug": "ey",

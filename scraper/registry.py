@@ -8,7 +8,7 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 REQUIRED_FIELDS = {"company_name", "ats_platform", "board_slug"}
-VALID_PLATFORMS = {"greenhouse", "lever", "ashby", "workday"}
+VALID_PLATFORMS = {"greenhouse", "lever", "ashby", "workday", "oracle"}
 
 
 def load_registry(path: Optional[str] = None) -> list[dict]:

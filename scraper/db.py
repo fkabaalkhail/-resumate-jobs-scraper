@@ -11,6 +11,7 @@ from typing import Optional
 from urllib.parse import urlparse, urlencode, parse_qs
 
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Float, JSON, Enum, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 from .logo_resolver import resolve_logo
@@ -198,6 +199,13 @@ def store_job(session, job_data: dict) -> bool:
     try:
         session.commit()
         return True
-    except Exception:
+    except IntegrityError:
+        # Duplicate URL (unique constraint) or similar — benign, treat as dup.
         session.rollback()
         return False
+    except Exception:
+        # A real database error (auth failure, connection loss, schema drift).
+        # Roll back and re-raise so the orchestrator can detect systemic
+        # write failure instead of silently reporting "0 new".
+        session.rollback()
+        raise
