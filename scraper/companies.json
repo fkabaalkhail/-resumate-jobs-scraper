@@ -1694,6 +1694,15 @@
       "enabled": true
     },
     {
+      "company_name": "Bank of Canada",
+      "ats_platform": "successfactors",
+      "board_slug": "bankofcanada",
+      "sf_host": "careers.bankofcanada.ca",
+      "sf_mode": "rmk",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=bankofcanada.ca&sz=128",
+      "enabled": true
+    },
+    {
       "company_name": "EY",
       "ats_platform": "workday",
       "board_slug": "ey",
