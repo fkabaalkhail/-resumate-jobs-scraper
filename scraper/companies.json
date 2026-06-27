@@ -1703,6 +1703,38 @@
       "enabled": true
     },
     {
+      "company_name": "Roche",
+      "ats_platform": "phenom",
+      "board_slug": "roche",
+      "phenom_host": "careers.roche.com",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=roche.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Molson Coors",
+      "ats_platform": "phenom",
+      "board_slug": "molsoncoors",
+      "phenom_host": "careers.molsoncoors.com",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=molsoncoors.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Solace",
+      "ats_platform": "bamboohr",
+      "board_slug": "solace",
+      "bamboohr_subdomain": "solace",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=solace.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Vosyn",
+      "ats_platform": "breezy",
+      "board_slug": "vosyn",
+      "breezy_subdomain": "vosyn",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=vosyn.ai&sz=128",
+      "enabled": true
+    },
+    {
       "company_name": "EY",
       "ats_platform": "workday",
       "board_slug": "ey",
