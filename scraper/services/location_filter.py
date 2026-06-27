@@ -47,6 +47,26 @@ class LocationFilter:
     
     US_INDICATORS = {"united states", "usa", "u.s.", "u.s.a."}
     CA_INDICATORS = {"canada", "can"}
+
+    # Bare city names some ATS platforms emit without province/country.
+    CA_CITIES = {
+        "toronto", "vancouver", "montreal", "montréal", "ottawa", "calgary",
+        "edmonton", "winnipeg", "hamilton", "kitchener", "waterloo",
+        "mississauga", "brampton", "markham", "london", "victoria", "halifax",
+        "burnaby", "richmond", "gatineau", "kanata", "scarborough",
+        "north york", "etobicoke", "vaughan", "oakville", "burlington",
+        "guelph", "saskatoon", "regina", "fredericton", "moncton", "kelowna",
+        "windsor", "laval", "longueuil", "sherbrooke", "barrie", "nepean",
+    }
+    US_CITIES = {
+        "new york", "san francisco", "los angeles", "chicago", "seattle",
+        "austin", "boston", "denver", "atlanta", "dallas", "houston",
+        "miami", "philadelphia", "phoenix", "san diego", "san jose",
+        "portland", "minneapolis", "detroit", "pittsburgh", "raleigh",
+        "charlotte", "nashville", "mountain view", "palo alto", "sunnyvale",
+        "cupertino", "menlo park", "redmond", "bellevue", "irvine",
+        "santa monica", "brooklyn", "manhattan",
+    }
     
     def filter(self, location: str) -> LocationResult:
         """Evaluate location for country and work type."""
@@ -98,7 +118,7 @@ class LocationFilter:
         for state in self.US_STATE_NAMES:
             if state in loc_lower:
                 return "US"
-        
+
         # Standalone state abbreviations
         tokens = re.findall(r'\b([A-Z]{2})\b', location)
         for token in tokens:
@@ -106,7 +126,16 @@ class LocationFilter:
                 return "US"
             if token in self.CA_PROVINCE_ABBREVS:
                 return "CA"
-        
+
+        # Bare city names (some ATS, e.g. Workday, give just "Ottawa").
+        # Use word-boundary matching to avoid substring false positives.
+        for city in self.CA_CITIES:
+            if re.search(rf'\b{re.escape(city)}\b', loc_lower):
+                return "CA"
+        for city in self.US_CITIES:
+            if re.search(rf'\b{re.escape(city)}\b', loc_lower):
+                return "US"
+
         # "Remote" without country defaults to US
         if re.search(r'\bremote\b', loc_lower):
             return "US"

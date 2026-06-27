@@ -1,7 +1,20 @@
-"""Workday ATS platform client."""
+"""Workday ATS platform client.
 
+Uses the Workday CXS job-board API:
+    POST {cxs_base}/jobs   body: {"limit","offset","appliedFacets","searchText"}
+
+where ``cxs_base`` looks like:
+    https://{host}.{wdN}.myworkdayjobs.com/wday/cxs/{tenant}/{site}
+
+The public (apply) URL for a posting is built from the external site host:
+    https://{host}.{wdN}.myworkdayjobs.com/{site}{externalPath}
+
+Configure each company with ``workday_url_template`` set to the cxs_base.
+"""
+
+import re
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from .base import BaseClient, RawJob
@@ -10,116 +23,125 @@ logger = logging.getLogger(__name__)
 
 
 class WorkdayClient(BaseClient):
-    """Fetches jobs from Workday company career sites."""
-    
+    """Fetches jobs from Workday CXS job boards."""
+
     PLATFORM = "workday"
     MAX_RETRIES = 2
-    RATE_LIMIT_WAIT = 120
-    REQUEST_DELAY = 2.0
-    
+    RATE_LIMIT_WAIT = 60
+    REQUEST_DELAY = 1.5
+    PAGE_SIZE = 20
+    MAX_PAGES = 10  # cap so a huge board doesn't dominate a run
+
     async def scrape_company(self, company: dict) -> list[RawJob]:
-        """Fetch entry-level jobs from a Workday company site."""
-        template = company.get("workday_url_template", "")
-        if not template:
-            logger.warning(f"Workday/{company['company_name']}: no URL template, skipping")
+        """Fetch jobs from a Workday CXS board, paginating through results."""
+        cxs_base = (company.get("workday_url_template", "") or "").rstrip("/")
+        if not cxs_base or "/wday/cxs/" not in cxs_base:
+            logger.warning(
+                f"Workday/{company['company_name']}: missing/invalid workday_url_template, skipping"
+            )
             return []
-        
-        # Workday uses a search API endpoint
-        search_url = template.rstrip("/") + "/search"
-        
-        payload = self._build_search_payload(company)
-        
-        response = await self._request_with_retry(
-            "POST", search_url,
-            json=payload,
-            headers={"Content-Type": "application/json"}
-        )
-        if not response:
-            return []
-        
-        try:
-            data = response.json()
-        except Exception:
-            logger.warning(f"Workday/{company['company_name']}: invalid JSON response")
-            return []
-        
-        # Workday response structure varies, try common patterns
-        jobs_data = (
-            data.get("jobPostings", []) or
-            data.get("listItems", []) or
-            data.get("body", {}).get("children", []) or
-            []
-        )
-        
-        raw_jobs = []
-        for job_data in jobs_data:
-            job = self._parse_job(job_data, company)
-            if job:
-                raw_jobs.append(job)
-        
+
+        jobs_url = cxs_base + "/jobs"
+        raw_jobs: list[RawJob] = []
+        offset = 0
+
+        for _ in range(self.MAX_PAGES):
+            payload = {
+                "limit": self.PAGE_SIZE,
+                "offset": offset,
+                "appliedFacets": {},
+                "searchText": "",
+            }
+            response = await self._request_with_retry(
+                "POST", jobs_url, json=payload,
+                headers={"Content-Type": "application/json"},
+            )
+            if not response:
+                break
+            try:
+                data = response.json()
+            except Exception:
+                logger.warning(f"Workday/{company['company_name']}: invalid JSON")
+                break
+
+            postings = data.get("jobPostings", []) or []
+            if not postings:
+                break
+
+            for jp in postings:
+                job = self._parse_job(jp, company, cxs_base)
+                if job:
+                    raw_jobs.append(job)
+
+            total = data.get("total", 0)
+            offset += self.PAGE_SIZE
+            if offset >= total:
+                break
+
         logger.info(f"Workday/{company['company_name']}: found {len(raw_jobs)} jobs")
         return raw_jobs
-    
-    def _build_search_payload(self, company: dict) -> dict:
-        """Build the POST payload for Workday search API."""
-        return {
-            "appliedFacets": {},
-            "limit": 20,
-            "offset": 0,
-            "searchText": "intern OR new grad OR junior OR entry level",
-        }
-    
-    def _parse_job(self, job_data: dict, company: dict) -> Optional[RawJob]:
-        """Parse a single Workday job result into RawJob."""
+
+    def _public_url(self, cxs_base: str, external_path: str) -> str:
+        """Build the public apply URL from the CXS base + externalPath.
+
+        cxs_base: https://{host}.{wdN}.myworkdayjobs.com/wday/cxs/{tenant}/{site}
+        public:   https://{host}.{wdN}.myworkdayjobs.com/{site}{externalPath}
+        """
+        m = re.match(r"(https://[^/]+)/wday/cxs/[^/]+/([^/]+)", cxs_base)
+        if not m:
+            return ""
+        host_root, site = m.group(1), m.group(2)
+        return f"{host_root}/{site}{external_path}"
+
+    def _parse_posted_date(self, posted: str) -> Optional[datetime]:
+        """Parse Workday's 'Posted X Days Ago' / 'Posted Today' text."""
+        if not posted:
+            return None
+        text = posted.lower()
+        now = datetime.utcnow()
+        if "today" in text:
+            return now
+        if "yesterday" in text:
+            return now - timedelta(days=1)
+        m = re.search(r"(\d+)\+?\s*day", text)
+        if m:
+            return now - timedelta(days=int(m.group(1)))
+        m = re.search(r"(\d+)\+?\s*month", text)
+        if m:
+            return now - timedelta(days=30 * int(m.group(1)))
+        return None
+
+    def _parse_job(self, jp: dict, company: dict, cxs_base: str) -> Optional[RawJob]:
+        """Parse a single Workday jobPosting into a RawJob."""
         try:
-            title = job_data.get("title", "") or job_data.get("bulletFields", [""])[0] if isinstance(job_data.get("bulletFields"), list) else ""
-            if not title:
-                title = job_data.get("text", "")
-            if not title:
+            title = jp.get("title", "")
+            external_path = jp.get("externalPath", "")
+            if not title or not external_path:
                 return None
-            
-            # Location
-            location = ""
-            if "locationsText" in job_data:
-                location = job_data["locationsText"]
-            elif "subtitles" in job_data and job_data["subtitles"]:
-                location = job_data["subtitles"][0].get("instances", [{}])[0].get("text", "") if job_data["subtitles"] else ""
-            
-            # URL
-            template = company.get("workday_url_template", "")
-            external_path = job_data.get("externalPath", "") or job_data.get("uri", "")
-            if external_path:
-                url = template.split("/search")[0] + external_path
-            else:
+
+            url = self._public_url(cxs_base, external_path)
+            if not url:
                 return None
-            
-            # Posted date
-            posted_date = None
-            posted = job_data.get("postedOn") or job_data.get("postedDate")
-            if posted:
-                try:
-                    posted_date = datetime.fromisoformat(posted.replace("Z", "+00:00"))
-                except (ValueError, AttributeError):
-                    pass
-            
-            # Description from Workday job data
-            description = ""
-            desc = job_data.get("description", "") or job_data.get("jobDescription", "")
-            if desc:
-                import re
-                description = re.sub(r'<[^>]+>', '\n', desc)
-                description = re.sub(r'\n{3,}', '\n\n', description).strip()
-                if len(description) > 2000:
-                    description = description[:2000] + "..."
-            
+
+            location = jp.get("locationsText", "")
+            # When Workday hides multi-location jobs as "N Locations", the
+            # primary city is usually encoded in the externalPath (e.g.
+            # /job/Ottawa/Product-Line-Manager_R029960).
+            if not location or re.search(r"\d+\s+locations", location.lower()):
+                m = re.match(r"/job/([^/]+)/", external_path)
+                if m:
+                    city = m.group(1).replace("-", " ").strip()
+                    location = f"{city} ({location})" if location else city
+
             return RawJob(
                 title=title,
                 company=company["company_name"],
                 location=location,
                 url=url,
-                posted_date=posted_date,
+                posted_date=self._parse_posted_date(jp.get("postedOn", "")),
                 company_logo=company.get("company_logo_url", ""),
-                description=description,
+                company_url=company.get("company_url", ""),
+                description="",
             )
         except Exception as e:
             logger.warning(f"Error parsing Workday job: {e}")
