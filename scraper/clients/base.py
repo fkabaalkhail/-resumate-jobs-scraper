@@ -22,6 +22,8 @@ class RawJob:
     department: Optional[str] = None
     salary_range: str = ""
     company_logo: str = ""
+    company_domain: str = ""
+    company_url: str = ""
     employment_type: Optional[str] = None
     description: str = ""
 

@@ -186,6 +186,7 @@ class ATSScraper:
             "posted_date": job.posted_date.replace(tzinfo=None) if job.posted_date else None,
             "salary_range": job.salary_range,
             "company_logo": job.company_logo,
+            "company_url": getattr(job, "company_url", ""),
             "ats_type": platform,
             "work_type": loc_result.work_type,
             "role_category": role_category,

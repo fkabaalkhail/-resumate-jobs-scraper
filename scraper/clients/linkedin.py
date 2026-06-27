@@ -129,13 +129,16 @@ class LinkedInClient(BaseClient):
             html
         )
 
-        # Find companies (in the subtitle after the link)
+        # Find companies (subtitle wraps the name in an <a> link)
         companies = re.findall(
-            r'base-search-card__subtitle[^"]*"[^>]*>\s*\n\s*([^\n<]+)',
+            r'base-search-card__subtitle[^>]*>(?:\s*<a[^>]*>)?\s*([^<\n]+?)\s*(?:</a>|</h4>|<)',
             html
         )
-        # Clean company names
-        companies = [c.strip() for c in companies]
+        # Clean company names (decode common HTML entities)
+        companies = [
+            c.strip().replace("&amp;", "&").replace("&#39;", "'").replace("&quot;", '"')
+            for c in companies
+        ]
 
         # Find locations
         locations = re.findall(

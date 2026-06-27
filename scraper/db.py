@@ -13,6 +13,8 @@ from urllib.parse import urlparse, urlencode, parse_qs
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Float, JSON, Enum, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
+from .logo_resolver import resolve_logo
+
 logger = logging.getLogger(__name__)
 
 
@@ -60,10 +62,16 @@ class ScrapedJob(Base):
     role_category = Column(String, default="")
     country = Column(String, default="")
     experience_level = Column(String, default="")
+    company_domain = Column(String, default="")
+    company_url = Column(String, default="")
 
 
 def get_engine(database_url: str):
-    """Create SQLAlchemy engine with proper SSL for Neon PostgreSQL."""
+    """Create SQLAlchemy engine. Uses SSL for Neon PostgreSQL; plain for SQLite."""
+    # SQLite (local/testing) — no driver rewrite, no SSL.
+    if database_url.startswith("sqlite"):
+        return create_engine(database_url, connect_args={"check_same_thread": False})
+
     # Rewrite URL for pg8000 driver
     url = database_url.split("?")[0]  # strip query params
     if url.startswith("postgres://"):
@@ -76,9 +84,32 @@ def get_engine(database_url: str):
     return engine
 
 
+def ensure_schema(engine) -> None:
+    """Idempotently ensure new columns exist before inserting.
+
+    The dashboard backend owns the scraped_jobs table, but this scraper deploys
+    independently and may run before the backend migration. Adding the columns
+    here (IF NOT EXISTS) keeps inserts from failing regardless of deploy order.
+    PostgreSQL only; safely skipped for any other backend.
+    """
+    if engine.dialect.name != "postgresql":
+        return
+    stmts = [
+        "ALTER TABLE scraped_jobs ADD COLUMN IF NOT EXISTS company_domain VARCHAR DEFAULT ''",
+        "ALTER TABLE scraped_jobs ADD COLUMN IF NOT EXISTS company_url VARCHAR DEFAULT ''",
+    ]
+    try:
+        with engine.begin() as conn:
+            for s in stmts:
+                conn.execute(text(s))
+    except Exception as e:  # pragma: no cover - defensive
+        logger.warning(f"ensure_schema skipped: {e}")
+
+
 def get_session(database_url: str):
-    """Create a database session."""
+    """Create a database session (ensures schema first)."""
     engine = get_engine(database_url)
+    ensure_schema(engine)
     Session = sessionmaker(bind=engine)
     return Session()
 
@@ -123,22 +154,39 @@ def store_job(session, job_data: dict) -> bool:
     if not url:
         return False
 
+    # Quality gate: require a non-empty company and title. Jobs missing these
+    # (e.g. LinkedIn cards that failed to parse) render as blank cards with no
+    # logo on the dashboard, so we drop them rather than store junk.
+    if not (job_data.get("company") or "").strip():
+        return False
+    if not (job_data.get("title") or "").strip():
+        return False
+
     # Check if URL already exists
     existing = session.query(ScrapedJob).filter(ScrapedJob.url == url).first()
     if existing:
         return False
 
+    # Resolve an accurate company logo + registrable domain so the dashboard
+    # can render a correct image (or a clean letter-avatar fallback).
+    company_name = job_data.get("company", "")
+    company_url = job_data.get("company_url", "")
+    raw_logo = job_data.get("company_logo", "")
+    company_logo, company_domain = resolve_logo(company_name, company_url, raw_logo)
+
     # Create and insert the job
     job = ScrapedJob(
         platform=job_data.get("platform", "greenhouse"),
         title=job_data.get("title", ""),
-        company=job_data.get("company", ""),
+        company=company_name,
         location=job_data.get("location", ""),
         url=url,
         description=job_data.get("description", ""),
         posted_date=job_data.get("posted_date"),
         salary_range=job_data.get("salary_range", ""),
-        company_logo=job_data.get("company_logo", ""),
+        company_logo=company_logo,
+        company_domain=company_domain,
+        company_url=company_url,
         ats_type=job_data.get("ats_type", ""),
         source_platform="ats",
         work_type=job_data.get("work_type", "onsite"),
