@@ -25,6 +25,9 @@ from .clients.successfactors import SuccessFactorsClient
 from .clients.phenom import PhenomClient
 from .clients.bamboohr import BambooHRClient
 from .clients.breezy import BreezyClient
+from .clients.recruitee import RecruiteeClient
+from .clients.jobvite import JobviteClient
+from .clients.talentplatform import TalentPlatformClient
 from .clients.linkedin import LinkedInClient
 from .services.entry_level_filter import EntryLevelFilter
 from .services.category_classifier import CategoryClassifier
@@ -62,6 +65,9 @@ CLIENT_MAP = {
     "phenom": PhenomClient,
     "bamboohr": BambooHRClient,
     "breezy": BreezyClient,
+    "recruitee": RecruiteeClient,
+    "jobvite": JobviteClient,
+    "talentplatform": TalentPlatformClient,
 }
 
 
@@ -226,7 +232,7 @@ class ATSScraper:
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="ATS Job Scraper")
-    parser.add_argument("--platform", choices=["greenhouse", "lever", "ashby", "workday", "oracle", "eightfold", "taleo", "successfactors", "phenom", "bamboohr", "breezy"],
+    parser.add_argument("--platform", choices=["greenhouse", "lever", "ashby", "workday", "oracle", "eightfold", "taleo", "successfactors", "phenom", "bamboohr", "breezy", "recruitee", "jobvite", "talentplatform"],
                        help="Scrape only a specific platform")
     parser.add_argument("--company", type=str, help="Scrape a single company by name")
     args = parser.parse_args()

@@ -1759,6 +1759,37 @@
       "enabled": true
     },
     {
+      "company_name": "Sony Music",
+      "ats_platform": "greenhouse",
+      "board_slug": "sonymusicentertainment",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=sonymusic.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Huawei",
+      "ats_platform": "recruitee",
+      "board_slug": "huaweicanada",
+      "recruitee_subdomain": "huaweicanada",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=huawei.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Ross Video",
+      "ats_platform": "jobvite",
+      "board_slug": "ross-video-careers",
+      "jobvite_company": "ross-video-careers",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=rossvideo.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Kinaxis",
+      "ats_platform": "talentplatform",
+      "board_slug": "kinaxis",
+      "tp_host": "join.kinaxis.com",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=kinaxis.com&sz=128",
+      "enabled": true
+    },
+    {
       "company_name": "EY",
       "ats_platform": "workday",
       "board_slug": "ey",
