@@ -1656,6 +1656,44 @@
       "enabled": true
     },
     {
+      "company_name": "IAMGOLD",
+      "ats_platform": "taleo",
+      "board_slug": "iamgold",
+      "taleo_host": "iamgold.taleo.net",
+      "taleo_portal": "101430233",
+      "taleo_section": "iamgold_ext",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=iamgold.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Agnico Eagle",
+      "ats_platform": "taleo",
+      "board_slug": "agnicoeagle",
+      "taleo_host": "agnicoeagle.taleo.net",
+      "taleo_portal": "101430233",
+      "taleo_section": "2",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=agnicoeagle.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Textron",
+      "ats_platform": "taleo",
+      "board_slug": "textron",
+      "taleo_host": "textron.taleo.net",
+      "taleo_portal": "8140753014",
+      "taleo_section": "10020",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=textron.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Bombardier",
+      "ats_platform": "successfactors",
+      "board_slug": "bombardier",
+      "sf_host": "jobs.bombardier.com",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=bombardier.com&sz=128",
+      "enabled": true
+    },
+    {
       "company_name": "EY",
       "ats_platform": "workday",
       "board_slug": "ey",
