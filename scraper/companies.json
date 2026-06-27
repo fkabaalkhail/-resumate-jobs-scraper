@@ -1479,6 +1479,16 @@
       "enabled": true
     },
     {
+      "company_name": "Ericsson",
+      "ats_platform": "eightfold",
+      "board_slug": "ericsson",
+      "eightfold_host": "ericsson.eightfold.ai",
+      "eightfold_domain": "ericsson.com",
+      "eightfold_careers_url": "https://ericsson.eightfold.ai/careers",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=ericsson.com&sz=128",
+      "enabled": true
+    },
+    {
       "company_name": "EY",
       "ats_platform": "workday",
       "board_slug": "ey",
