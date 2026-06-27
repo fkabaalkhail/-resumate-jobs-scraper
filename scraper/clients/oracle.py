@@ -61,7 +61,7 @@ class OracleClient(BaseClient):
     async def scrape_company(self, company: dict) -> list[RawJob]:
         host = (company.get("oracle_host") or "").strip()
         site = (company.get("oracle_site") or "CX_1").strip()
-        careers_host = (company.get("oracle_careers_host") or host).strip()
+        careers_host = (company.get("oracle_careers_host") or "").strip()
         if not host:
             logger.warning(
                 f"Oracle/{company['company_name']}: missing oracle_host, skipping"
@@ -125,7 +125,7 @@ class OracleClient(BaseClient):
                     host, site, jp.get("Id")
                 )
                 await asyncio.sleep(self.DETAIL_DELAY)
-            job = self._parse_job(jp, company, site, careers_host, description)
+            job = self._parse_job(jp, company, site, host, careers_host, description)
             if job:
                 raw_jobs.append(job)
 
@@ -186,7 +186,8 @@ class OracleClient(BaseClient):
                 return None
 
     def _parse_job(
-        self, jp: dict, company: dict, site: str, careers_host: str, description: str
+        self, jp: dict, company: dict, site: str, host: str,
+        careers_host: str, description: str
     ) -> Optional[RawJob]:
         try:
             title = jp.get("Title", "")
@@ -194,7 +195,14 @@ class OracleClient(BaseClient):
             if not title or not job_id:
                 return None
 
-            url = f"https://{careers_host}/en/sites/{site}/job/{job_id}"
+            # Prefer a configured vanity careers host (e.g. jobs.nokia.com);
+            # otherwise use the canonical Oracle CandidateExperience URL, which
+            # works for any ORC tenant.
+            if careers_host:
+                url = f"https://{careers_host}/en/sites/{site}/job/{job_id}"
+            else:
+                url = (f"https://{host}/hcmUI/CandidateExperience/en/sites/"
+                       f"{site}/job/{job_id}")
 
             location = jp.get("PrimaryLocation", "") or ""
             secondary = jp.get("secondaryLocations") or []

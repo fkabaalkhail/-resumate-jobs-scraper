@@ -1489,6 +1489,46 @@
       "enabled": true
     },
     {
+      "company_name": "Lumentum",
+      "ats_platform": "workday",
+      "board_slug": "lumentum",
+      "workday_url_template": "https://lumentum.wd5.myworkdayjobs.com/wday/cxs/lumentum/LITE",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=lumentum.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "SOTI",
+      "ats_platform": "workday",
+      "board_slug": "soti",
+      "workday_url_template": "https://soti.wd3.myworkdayjobs.com/wday/cxs/soti/Careers",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=soti.net&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Parsons",
+      "ats_platform": "workday",
+      "board_slug": "parsons",
+      "workday_url_template": "https://parsons.wd5.myworkdayjobs.com/wday/cxs/parsons/Search",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=parsons.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "BGIS",
+      "ats_platform": "oracle",
+      "board_slug": "bgis",
+      "oracle_host": "fa-evcg-saasfaprod1.fa.ocs.oraclecloud.com",
+      "oracle_site": "CX_1",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=bgis.com&sz=128",
+      "enabled": true
+    },
+    {
+      "company_name": "Tenstorrent",
+      "ats_platform": "greenhouse",
+      "board_slug": "tenstorrent",
+      "company_logo_url": "https://www.google.com/s2/favicons?domain=tenstorrent.com&sz=128",
+      "enabled": true
+    },
+    {
       "company_name": "EY",
       "ats_platform": "workday",
       "board_slug": "ey",
